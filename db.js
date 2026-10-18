@@ -176,6 +176,17 @@ function buildQuery(filters = {}) {
   const where = [];
   const params = {};
 
+  // Skor kualitas (x10) — selaras dengan perhitungan bintang di frontend.
+  const QUALITY = `(CASE
+    WHEN scopus_quartile IN ('Q1','Q2','Q3','Q4') OR sinta_rank IN ('S1','S2','S3','S4','S5','S6')
+    THEN MAX(
+      CASE scopus_quartile WHEN 'Q1' THEN 50 WHEN 'Q2' THEN 40 WHEN 'Q3' THEN 30 WHEN 'Q4' THEN 20 ELSE 0 END,
+      CASE sinta_rank WHEN 'S1' THEN 45 WHEN 'S2' THEN 40 WHEN 'S3' THEN 35 WHEN 'S4' THEN 25 WHEN 'S5' THEN 20 WHEN 'S6' THEN 15 ELSE 0 END)
+    WHEN index_type LIKE '%Scopus%' THEN 30
+    WHEN index_type LIKE '%DOAJ%' THEN 15
+    ELSE 10 END)`;
+  const COMMUNITY = '(SELECT AVG(stars) FROM ratings WHERE ratings.journal_id = journals.id)';
+
   if (filters.q) {
     where.push('(name LIKE $q OR publisher LIKE $q OR field LIKE $q OR issn LIKE $q OR eissn LIKE $q)');
     params.$q = `%${filters.q}%`;
@@ -187,17 +198,11 @@ function buildQuery(filters = {}) {
   if (filters.is_free === 'true') { where.push('is_free = 1'); }
   if (filters.field) { where.push('field LIKE $field'); params.$field = `%${filters.field}%`; }
   if (filters.scope) { where.push('scope = $scope'); params.$scope = filters.scope; }
-
-  // Skor kualitas (x10) — selaras dengan perhitungan bintang di frontend.
-  const QUALITY = `(CASE
-    WHEN scopus_quartile IN ('Q1','Q2','Q3','Q4') OR sinta_rank IN ('S1','S2','S3','S4','S5','S6')
-    THEN MAX(
-      CASE scopus_quartile WHEN 'Q1' THEN 50 WHEN 'Q2' THEN 40 WHEN 'Q3' THEN 30 WHEN 'Q4' THEN 20 ELSE 0 END,
-      CASE sinta_rank WHEN 'S1' THEN 45 WHEN 'S2' THEN 40 WHEN 'S3' THEN 35 WHEN 'S4' THEN 25 WHEN 'S5' THEN 20 WHEN 'S6' THEN 15 ELSE 0 END)
-    WHEN index_type LIKE '%Scopus%' THEN 30
-    WHEN index_type LIKE '%DOAJ%' THEN 15
-    ELSE 10 END)`;
-  const COMMUNITY = '(SELECT AVG(stars) FROM ratings WHERE ratings.journal_id = journals.id)';
+  if (filters.min_rating) {
+    const mr = Math.max(1, Math.min(5, Number(filters.min_rating)));
+    where.push(`${QUALITY} >= $min_rating`);
+    params.$min_rating = mr * 10;
+  }
 
   const sortMap = {
     name: 'name COLLATE NOCASE ASC',

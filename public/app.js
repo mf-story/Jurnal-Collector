@@ -7,7 +7,7 @@ let page = 1;
 
 const state = {
   q: '', index_type: '', sinta_rank: '', scopus_quartile: '',
-  status: '', is_free: '', sort: 'name', field: '', scope: ''
+  status: '', is_free: '', sort: 'name', field: '', scope: '', min_rating: ''
 };
 
 const auth = { admin: false, pending: 0 };
@@ -217,6 +217,7 @@ $('#fScopus').addEventListener('change', (e) => { state.scopus_quartile = e.targ
 $('#fStatus').addEventListener('change', (e) => { state.status = e.target.value; load(); });
 $('#fField').addEventListener('change', (e) => { state.field = e.target.value; load(); });
 $('#fScope').addEventListener('change', (e) => { setScope(e.target.value); });
+$('#fRating').addEventListener('change', (e) => { state.min_rating = e.target.value; load(); });
 
 // ---- Tab cakupan (Nasional / Internasional) ----
 function setScope(scope) {
