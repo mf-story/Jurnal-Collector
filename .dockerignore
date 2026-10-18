@@ -1,0 +1,19 @@
+# Dependensi & artefak build
+node_modules
+npm-debug.log
+
+# Runtime DB lokal (pakai seed/jurnal.db, bukan data/)
+data
+
+# Git & editor
+.git
+.gitignore
+.vscode
+
+# File data sementara
+*.parquet
+*.log
+
+# Dokumen pengembangan (opsional ikut, dikecualikan agar image ramping)
+contoh-template.csv
+data-jurnal-nyata.csv

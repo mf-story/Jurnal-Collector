@@ -1,0 +1,26 @@
+{
+  "name": "jurnal-collector",
+  "version": "1.0.0",
+  "description": "Aplikasi web untuk mengumpulkan jurnal Sinta & Scopus beserta status, biaya, dan lama publish",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node seed.js",
+    "import:doaj": "node import-doaj.js",
+    "import:topjurnal": "node import-topjurnal.js",
+    "import:scimago": "node import-scimago.js",
+    "enrich:sinta": "node enrich-sinta.js",
+    "scrape:all": "node scrape-all-sinta.js",
+    "revalidate": "node revalidate-sinta.js",
+    "dedupe": "node dedupe.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "express": "^4.21.2",
+    "hyparquet": "^1.31.4"
+  }
+}

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jurnal Collector — Sinta & Scopus</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">
+        <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="logoGrad" x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#38bdf8"/>
+              <stop offset="1" stop-color="#2563eb"/>
+            </linearGradient>
+          </defs>
+          <rect x="6" y="6" width="36" height="36" rx="10" fill="url(#logoGrad)"/>
+          <path d="M14 16.5c3.6-1.6 6.4-1.6 10 0v16c-3.6-1.6-6.4-1.6-10 0v-16Z" fill="#fff" fill-opacity="0.95"/>
+          <path d="M34 16.5c-3.6-1.6-6.4-1.6-10 0v16c3.6-1.6 6.4-1.6 10 0v-16Z" fill="#fff" fill-opacity="0.75"/>
+          <circle cx="24" cy="24" r="3.2" fill="#fbbf24"/>
+        </svg>
+      </span>
+      <div>
+        <h1>Jurnal Collector</h1>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="btnScrape" class="btn btn-ghost admin-only hidden">⬇ Scrape Sinta</button>
+      <button id="btnUpdate" class="btn btn-ghost admin-only hidden">🔄 Perbarui Data</button>
+      <button id="btnImport" class="btn btn-ghost admin-only hidden">📁 Impor CSV</button>
+      <a id="btnExport" class="btn btn-ghost admin-only hidden" href="/api/export/csv">⬆ Ekspor CSV</a>
+      <button id="btnReview" class="btn btn-ghost admin-only hidden">📥 Usulan <span id="pendingBadge" class="pending-badge hidden">0</span></button>
+      <button id="btnAdd" class="btn btn-primary admin-only hidden">+ Tambah Jurnal</button>
+      <button id="btnProposeNew" class="btn btn-primary visitor-only">+ Ajukan Jurnal</button>
+      <button id="btnLogin" class="btn btn-ghost visitor-only">🔑 Login</button>
+      <button id="btnChangePw" class="btn btn-ghost admin-only hidden">🔑 Ganti Sandi</button>
+      <button id="btnLogout" class="btn btn-ghost admin-only hidden">Keluar</button>
+    </div>
+  </header>
+
+  <div id="adminBar" class="admin-bar admin-only hidden">
+    <span class="admin-chip">👤 Mode Admin</span>
+    <span class="admin-hint">Anda dapat mengedit, menambah, menghapus, dan meninjau usulan pengunjung.</span>
+  </div>
+
+  <section class="stats" id="stats">
+    <div class="stat-card"><span class="stat-num" id="statTotal">0</span><span class="stat-label">Total Jurnal</span></div>
+    <div class="stat-card"><span class="stat-num" id="statSinta">0</span><span class="stat-label">Terindeks Sinta</span></div>
+    <div class="stat-card"><span class="stat-num" id="statScopus">0</span><span class="stat-label">Terindeks Scopus</span></div>
+  </section>
+
+  <section class="dist" id="dist">
+    <div class="dist-group">
+      <span class="dist-title">Peringkat Sinta</span>
+      <div class="dist-bar" id="distRank"></div>
+    </div>
+    <div class="dist-group">
+      <span class="dist-title">Quartile Scopus</span>
+      <div class="dist-bar" id="distQuartile"></div>
+    </div>
+  </section>
+
+  <section class="toolbar">
+    <input type="search" id="search" placeholder="Cari nama, penerbit, bidang, ISSN..." />
+    <div class="scope-tabs" id="scopeTabs">
+      <button class="scope-tab active" data-scope="">Semua <span class="scope-count" id="scopeCountAll">0</span></button>
+      <button class="scope-tab" data-scope="Nasional">🇮🇩 Nasional <span class="scope-count" id="scopeCountNas">0</span></button>
+      <button class="scope-tab" data-scope="Internasional">🌐 Internasional <span class="scope-count" id="scopeCountIntl">0</span></button>
+    </div>
+    <select id="fIndex">
+      <option value="">Semua Indeks</option>
+      <option value="Sinta">Sinta</option>
+      <option value="Scopus">Scopus</option>
+      <option value="Sinta &amp; Scopus">Sinta &amp; Scopus</option>
+      <option value="DOAJ">DOAJ / Open Access</option>
+    </select>
+    <select id="fSinta">
+      <option value="">Peringkat Sinta</option>
+      <option>S1</option><option>S2</option><option>S3</option>
+      <option>S4</option><option>S5</option><option>S6</option>
+    </select>
+    <select id="fScopus">
+      <option value="">Quartile Scopus</option>
+      <option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option>
+    </select>
+    <select id="fStatus">
+      <option value="">Semua Status</option>
+      <option>Aktif</option><option>Terindeks</option>
+      <option>Suspended</option><option>Discontinued</option>
+    </select>
+    <select id="fField">
+      <option value="">Semua Bidang</option>
+    </select>
+    <select id="fScope">
+      <option value="">Semua Cakupan</option>
+      <option value="Nasional">Nasional (Indonesia)</option>
+      <option value="Internasional">Internasional</option>
+    </select>
+    <select id="fSort">
+      <option value="name">Urut: Nama</option>
+      <option value="rating_desc">Rating tertinggi</option>
+      <option value="rating_asc">Rating terendah</option>
+      <option value="community_desc">Rating komunitas tertinggi</option>
+      <option value="apc_asc">Biaya termurah</option>
+      <option value="apc_desc">Biaya termahal</option>
+      <option value="publish_asc">Publish tercepat</option>
+      <option value="newest">Terbaru ditambahkan</option>
+    </select>
+    <label class="check"><input type="checkbox" id="fFree" /> Gratis saja</label>
+  </section>
+
+  <section class="table-wrap">
+    <table id="table">
+      <thead>
+        <tr>
+          <th>Nama Jurnal</th>
+          <th>Indeks</th>
+          <th>Peringkat</th>
+          <th>Rating</th>
+          <th>Status</th>
+          <th>Biaya (APC)</th>
+          <th>Lama Publish</th>
+          <th>Bidang</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div id="empty" class="empty hidden">Belum ada data. Klik <b>Tambah Jurnal</b>, <b>Scrape Sinta</b>, atau <b>Impor CSV</b>.</div>
+  </section>
+
+  <nav class="pagination hidden" id="pagination">
+    <span id="pageInfo" class="page-info"></span>
+    <div class="page-ctrl">
+      <button class="btn btn-ghost" id="btnPrev">‹ Sebelumnya</button>
+      <span id="pageNow" class="page-now"></span>
+      <button class="btn btn-ghost" id="btnNext">Berikutnya ›</button>
+    </div>
+  </nav>
+
+  <!-- Modal Form -->
+  <div class="modal hidden" id="modal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h2 id="modalTitle">Tambah Jurnal</h2>
+        <button class="close" id="modalClose">&times;</button>
+      </div>
+      <form id="form">
+        <input type="hidden" name="id" />
+        <div id="proposeBanner" class="propose-banner hidden">
+          📝 Anda mengajukan usulan. Perubahan akan ditinjau admin sebelum dipublikasikan.
+        </div>
+        <div class="grid">
+          <label class="full">Nama Jurnal *<input name="name" required /></label>
+          <label>Penerbit<input name="publisher" /></label>
+          <label>Bidang Ilmu<input name="field" /></label>
+          <label>ISSN<input name="issn" /></label>
+          <label>E-ISSN<input name="eissn" /></label>
+          <label class="full">URL<input name="url" type="url" placeholder="https://..." /></label>
+          <label>Indeks
+            <select name="index_type">
+              <option value="">—</option>
+              <option>Sinta</option><option>Scopus</option><option>Sinta &amp; Scopus</option>
+            </select>
+          </label>
+          <label>Status
+            <select name="status">
+              <option>Aktif</option><option>Terindeks</option>
+              <option>Suspended</option><option>Discontinued</option>
+            </select>
+          </label>
+          <label>Peringkat Sinta
+            <select name="sinta_rank">
+              <option value="">—</option>
+              <option>S1</option><option>S2</option><option>S3</option>
+              <option>S4</option><option>S5</option><option>S6</option>
+            </select>
+          </label>
+          <label>Quartile Scopus
+            <select name="scopus_quartile">
+              <option value="">—</option>
+              <option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option>
+            </select>
+          </label>
+          <label>Biaya (APC)<input name="apc_cost" type="number" step="any" min="0" placeholder="0" /></label>
+          <label>Mata Uang
+            <select name="currency"><option>IDR</option><option>USD</option><option>EUR</option></select>
+          </label>
+          <label>Lama Publish (minggu)<input name="publish_weeks" type="number" min="0" /></label>
+          <label>Acceptance Rate (%)<input name="acceptance_rate" type="number" step="any" min="0" max="100" /></label>
+          <label class="check full"><input type="checkbox" name="is_free" /> Gratis (tanpa biaya publikasi)</label>
+          <label class="full">Catatan<textarea name="notes" rows="2"></textarea></label>
+          <div id="proposeFields" class="propose-fields full hidden">
+            <label>Nama Anda (opsional)<input name="submitter" placeholder="mis. Budi / email" /></label>
+            <label>Alasan usulan (opsional)<textarea name="submit_note" rows="2" placeholder="mis. Biaya terbaru dari situs resmi jurnal"></textarea></label>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" id="formCancel">Batal</button>
+          <button type="submit" class="btn btn-primary" id="formSubmitBtn">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Scrape -->
+  <div class="modal hidden" id="scrapeModal">
+    <div class="modal-box small">
+      <div class="modal-head"><h2>Scrape Sinta</h2><button class="close" id="scrapeClose">&times;</button></div>
+      <div class="pad">
+        <p class="hint">Mengambil data indeksasi jurnal dari direktori Sinta. Biaya &amp; lama publish tetap diisi manual.</p>
+        <label>Kata kunci (opsional)<input id="scrapeQ" placeholder="mis. informatika" /></label>
+        <label>Jumlah halaman (1–10)<input id="scrapePages" type="number" value="1" min="1" max="10" /></label>
+        <div id="scrapeMsg" class="msg hidden"></div>
+        <div class="modal-foot">
+          <button class="btn btn-ghost" id="scrapeCancel">Batal</button>
+          <button class="btn btn-primary" id="scrapeRun">Mulai Scrape</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Perbarui Data -->
+  <div class="modal hidden" id="updateModal">
+    <div class="modal-box small">
+      <div class="modal-head"><h2>Perbarui Data dari Sinta</h2><button class="close" id="updateClose">&times;</button></div>
+      <div class="pad">
+        <p class="hint">Menyegarkan <b>indeks, peringkat Sinta, status, dan bidang</b> seluruh jurnal
+          terhadap data terbaru di portal Sinta. Biaya (APC), lama publish, dan status Scopus
+          dari SCImago <b>tidak akan ditimpa/diturunkan</b>. Proses berjalan di latar belakang
+          (±20–30 menit) — Anda boleh menutup jendela ini, prosesnya tetap berjalan.</p>
+
+        <div id="updateProgress" class="update-progress hidden">
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="progress-meta">
+            <span id="progressText">Memulai...</span>
+            <span id="progressChanges"></span>
+          </div>
+        </div>
+        <div id="updateMsg" class="msg hidden"></div>
+
+        <div class="modal-foot">
+          <button class="btn btn-ghost" id="updateCloseBtn">Tutup</button>
+          <button class="btn btn-ghost hidden" id="updateCancelJob">Hentikan</button>
+          <button class="btn btn-primary" id="updateRun">Mulai Perbarui</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Beri Rating -->
+  <div class="modal hidden" id="rateModal">
+    <div class="modal-box small">
+      <div class="modal-head"><h2>Beri Penilaian</h2><button class="close" id="rateClose">&times;</button></div>
+      <div class="pad">
+        <p class="hint" id="rateJournalName"></p>
+        <div class="rate-quality-info" id="rateQualityInfo"></div>
+        <div class="star-input" id="starInput">
+          <span data-star="1">★</span><span data-star="2">★</span><span data-star="3">★</span><span data-star="4">★</span><span data-star="5">★</span>
+        </div>
+        <label>Ulasan (opsional)<textarea id="rateReview" rows="2" placeholder="Pengalaman Anda dengan jurnal ini..."></textarea></label>
+        <label>Nama Anda (opsional)<input id="rateSubmitter" placeholder="mis. Budi" /></label>
+        <div id="rateMsg" class="msg hidden"></div>
+        <div id="rateList" class="rate-list"></div>
+        <div class="modal-foot">
+          <button class="btn btn-ghost" id="rateCancel">Batal</button>
+          <button class="btn btn-primary" id="rateSubmit">Kirim Penilaian</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Login Admin -->
+  <div class="modal hidden" id="loginModal">
+    <div class="modal-box small">
+      <div class="modal-head"><h2>Masuk Admin</h2><button class="close" id="loginClose">&times;</button></div>
+      <div class="pad">
+        <p class="hint">Masuk untuk mengelola data dan meninjau usulan pengunjung.</p>
+        <form id="loginForm">
+          <label>Kata sandi<input type="password" id="loginPassword" autocomplete="current-password" required /></label>
+          <div id="loginMsg" class="msg err hidden"></div>
+          <div class="modal-foot">
+            <button type="button" class="btn btn-ghost" id="loginCancel">Batal</button>
+            <button type="submit" class="btn btn-primary">Masuk</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ganti Kata Sandi -->
+  <div class="modal hidden" id="pwModal">
+    <div class="modal-box small">
+      <div class="modal-head"><h2>Ganti Kata Sandi Admin</h2><button class="close" id="pwClose">&times;</button></div>
+      <div class="pad">
+        <form id="pwForm">
+          <label>Kata sandi lama<input type="password" id="pwCurrent" autocomplete="current-password" required /></label>
+          <label>Kata sandi baru (min. 4 karakter)<input type="password" id="pwNext" autocomplete="new-password" required /></label>
+          <label>Ulangi kata sandi baru<input type="password" id="pwConfirm" autocomplete="new-password" required /></label>
+          <div id="pwMsg" class="msg hidden"></div>
+          <div class="modal-foot">
+            <button type="button" class="btn btn-ghost" id="pwCancel">Batal</button>
+            <button type="submit" class="btn btn-primary">Simpan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Review Usulan -->
+  <div class="modal hidden" id="reviewModal">
+    <div class="modal-box">
+      <div class="modal-head"><h2>Usulan Pengunjung <span id="reviewCount" class="count-chip"></span></h2><button class="close" id="reviewClose">&times;</button></div>
+      <div class="pad">
+        <div id="reviewList" class="review-list"></div>
+        <div id="reviewEmpty" class="empty hidden">Belum ada usulan yang menunggu.</div>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" accept=".csv,text/csv" class="hidden" />
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

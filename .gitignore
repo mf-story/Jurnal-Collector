@@ -1,0 +1,10 @@
+node_modules/
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+data/*.parquet
+data/*.json
+*.log
+
+# seed/jurnal.db SENGAJA di-commit sebagai data awal untuk deployment

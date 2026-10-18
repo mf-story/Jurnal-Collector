@@ -1,0 +1,3 @@
+name,publisher,issn,eissn,url,field,index_type,sinta_rank,scopus_quartile,status,apc_cost,currency,is_free,publish_weeks,acceptance_rate,notes
+Contoh Jurnal Informatika,Universitas Contoh,1234-5678,8765-4321,https://contoh.ac.id/jurnal,Informatika,Sinta,S2,,Aktif,500000,IDR,0,8,35,Terbit dua kali setahun
+Contoh Jurnal Open Access,Universitas Terbuka,,2222-3333,,Pendidikan,Sinta & Scopus,S1,Q3,Aktif,0,IDR,1,12,,Tanpa biaya publikasi
