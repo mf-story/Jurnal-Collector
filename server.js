@@ -5,8 +5,10 @@ import {
   listJournals, pageJournals, getJournal, createJournal, updateJournal,
   deleteJournal, upsertByName, stats, listFields,
   createSubmission, listSubmissions, getSubmission, setSubmissionStatus, countPendingSubmissions,
-  addRating, getRatingSummary, listRatings
+  addRating, getRatingSummary, listRatings,
+  recordVisit, visitorStats
 } from './db.js';
+import crypto from 'node:crypto';
 import {
   ensureAdminPassword, verifyPassword, setAdminPassword, isAdmin,
   setAuthCookie, clearAuthCookie, requireAdmin
@@ -53,6 +55,22 @@ app.post('/api/auth/change-password', requireAdmin, (req, res) => {
 // ---- Statistik ----
 app.get('/api/stats', (req, res) => {
   res.json(stats());
+});
+
+// ---- Pengunjung ----
+// Catat kunjungan (dipanggil sekali per muat halaman) & kembalikan ringkasan.
+app.post('/api/visit', (req, res) => {
+  try {
+    const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
+    const ua = req.headers['user-agent'] || '';
+    const hash = crypto.createHash('sha256').update(ip + '|' + ua).digest('hex').slice(0, 32);
+    recordVisit(hash);
+  } catch { /* abaikan kegagalan pencatatan */ }
+  res.json(visitorStats());
+});
+
+app.get('/api/visit', (req, res) => {
+  res.json(visitorStats());
 });
 
 // ---- Daftar bidang (untuk filter) ----

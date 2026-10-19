@@ -293,6 +293,21 @@ textarea { resize: vertical; }
 
 .hidden { display: none !important; }
 
+/* ---- Footer pengunjung ---- */
+.site-footer {
+  margin: 8px 28px 32px; padding: 16px 20px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+}
+.visit-stats { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; color: #334155; }
+.visit-item { display: inline-flex; align-items: center; gap: 6px; }
+.visit-item b { color: var(--primary); font-weight: 700; }
+.visit-ico { font-size: 15px; }
+.visit-sep { color: var(--line); }
+.footer-copy { font-size: 13px; color: var(--muted); }
+
 @media (max-width: 760px) {
   .topbar { padding: 14px 16px; }
   .stats { grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 16px 16px 4px; }
@@ -333,4 +348,5 @@ textarea { resize: vertical; }
   #tbody td[data-label="Jurnal"] .jname { font-size: 15px; }
   #tbody td .row-actions { justify-content: flex-end; }
   .rate-cell { align-items: flex-end; }
+  .site-footer { margin: 8px 12px 24px; flex-direction: column; align-items: flex-start; }
 }

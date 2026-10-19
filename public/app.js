@@ -642,6 +642,22 @@ async function refreshAfterReview() {
   load();
 }
 
+// ---- Pengunjung ----
+function fmtVisit(n) { return new Intl.NumberFormat('id-ID').format(n || 0); }
+async function recordVisit() {
+  try {
+    const s = await (await fetch('/api/visit', { method: 'POST' })).json();
+    renderVisit(s);
+  } catch { /* abaikan */ }
+}
+function renderVisit(s) {
+  if (!s) return;
+  $('#visUnique').textContent = fmtVisit(s.uniqueVisitors);
+  $('#visTotal').textContent = fmtVisit(s.totalHits);
+  $('#visToday').textContent = fmtVisit(s.todayVisitors);
+}
+
 loadAuth();
 load();
 loadFields();
+recordVisit();

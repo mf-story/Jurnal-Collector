@@ -93,6 +93,41 @@ db.exec(`
 `);
 db.exec('CREATE INDEX IF NOT EXISTS idx_ratings_journal ON ratings(journal_id);');
 
+// Catatan kunjungan untuk statistik pengunjung.
+// Satu baris per (hash IP + tanggal) agar bisa hitung unik harian & total.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS visits (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    visitor     TEXT NOT NULL,              -- hash IP+UA
+    day         TEXT NOT NULL,              -- YYYY-MM-DD
+    hits        INTEGER DEFAULT 1,          -- jumlah kunjungan hari itu
+    created_at  TEXT DEFAULT (datetime('now')),
+    updated_at  TEXT DEFAULT (datetime('now'))
+  );
+`);
+db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_visits_visitor_day ON visits(visitor, day);');
+
+// Catat satu kunjungan; kembalikan apakah pengunjung baru hari ini.
+export function recordVisit(visitorHash) {
+  const day = new Date().toISOString().slice(0, 10);
+  const existing = db.prepare('SELECT id FROM visits WHERE visitor = ? AND day = ?').get(visitorHash, day);
+  if (existing) {
+    db.prepare("UPDATE visits SET hits = hits + 1, updated_at = datetime('now') WHERE id = ?").run(existing.id);
+    return { newToday: false };
+  }
+  db.prepare('INSERT INTO visits (visitor, day) VALUES (?, ?)').run(visitorHash, day);
+  return { newToday: true };
+}
+
+export function visitorStats() {
+  const day = new Date().toISOString().slice(0, 10);
+  const totalHits = db.prepare('SELECT COALESCE(SUM(hits),0) n FROM visits').get().n;
+  const uniqueVisitors = db.prepare('SELECT COUNT(DISTINCT visitor) n FROM visits').get().n;
+  const todayVisitors = db.prepare('SELECT COUNT(*) n FROM visits WHERE day = ?').get(day).n;
+  const todayHits = db.prepare('SELECT COALESCE(SUM(hits),0) n FROM visits WHERE day = ?').get(day).n;
+  return { totalHits, uniqueVisitors, todayVisitors, todayHits };
+}
+
 export function addRating(journalId, stars, review, submitter) {
   const s = Math.max(1, Math.min(5, Math.round(Number(stars) || 0)));
   const info = db.prepare(
