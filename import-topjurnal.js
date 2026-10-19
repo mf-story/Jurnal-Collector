@@ -18,9 +18,9 @@ for (const r of db.prepare('SELECT id,name,issn,eissn FROM journals').all()) {
   nameIndex.set(r.name.trim().toLowerCase(), r.id);
 }
 function findExisting(j) {
+  // Cocokkan HANYA via ISSN untuk menghindari false-positive dari nama generik.
   for (const k of [norm(j.issn), norm(j.eissn)].filter((x) => x.length === 8)) if (issnIndex.has(k)) return issnIndex.get(k);
-  const nm = j.name.trim().toLowerCase();
-  return nameIndex.has(nm) ? nameIndex.get(nm) : null;
+  return null;
 }
 function indexItem(id, j) {
   for (const k of [norm(j.issn), norm(j.eissn)].filter((x) => x.length === 8)) issnIndex.set(k, id);

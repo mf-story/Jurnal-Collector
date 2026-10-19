@@ -30,18 +30,20 @@ function pickMatch(items, journal) {
     const itIssns = [issnDigits(it.issn), issnDigits(it.eissn)].filter(Boolean);
     if (localIssns.some((x) => itIssns.includes(x))) return it;
   }
-  // fallback: nama sama persis (case-insensitive) bila hanya 1 hasil
+  // fallback: nama sama PERSIS (case-insensitive). Tidak mengambil hasil sembarang
+  // untuk mencegah salah cocok pada nama generik.
   const lname = journal.name.trim().toLowerCase();
   const byName = items.find((it) => it.name.trim().toLowerCase() === lname);
   if (byName) return byName;
-  return items.length === 1 ? items[0] : null;
+  return null;
 }
 
 async function enrichOne(journal) {
   const queries = [];
   if (journal.issn) queries.push(issnDigits(journal.issn));
   if (journal.eissn) queries.push(issnDigits(journal.eissn));
-  queries.push(journal.name);
+  // Hanya cari via nama bila jurnal tidak punya ISSN sama sekali.
+  if (!journal.issn && !journal.eissn) queries.push(journal.name);
 
   for (const q of queries) {
     const items = await searchWithRetry(q);

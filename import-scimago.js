@@ -47,10 +47,10 @@ async function run() {
       const keys = issnParts.map(norm).filter((x) => x.length === 8);
       const quartile = /Q[1-4]/.test(j.sjr_best_quartile || '') ? j.sjr_best_quartile : null;
 
-      // Dedup
+      // Dedup — HANYA via ISSN. Pencocokan nama dinonaktifkan karena nama generik
+      // (mis. "Communications") menyebabkan false-positive menandai jurnal lain Scopus.
       let existingId = null;
       for (const k of keys) if (issnIndex.has(k)) { existingId = issnIndex.get(k); break; }
-      if (!existingId) { const nm = name.toLowerCase(); if (nameIndex.has(nm)) existingId = nameIndex.get(nm); }
 
       if (existingId) {
         const cur = getJournal(existingId);

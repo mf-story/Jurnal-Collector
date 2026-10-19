@@ -15,12 +15,14 @@ import {
 } from './auth.js';
 import { scrapeSinta, scrapeScopus } from './scraper.js';
 import { startUpdate, getJobStatus, requestCancel } from './updater.js';
+import { runMigrations } from './migrations.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 ensureAdminPassword();
+runMigrations();
 
 app.use(express.json({ limit: '5mb' }));
 app.use(express.text({ type: 'text/csv', limit: '10mb' }));
